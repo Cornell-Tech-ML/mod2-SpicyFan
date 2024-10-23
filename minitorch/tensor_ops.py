@@ -252,7 +252,6 @@ def tensor_map(
         Tensor map function.
 
     """
-
     def _map(
         out: Storage,
         out_shape: Shape,
@@ -261,8 +260,14 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        out_index = np.array(out_shape)
+        in_index = np.array(in_shape)
+        for i in range(operators.prod(out_shape)):
+            to_index(i, out_shape, out_index)
+            broadcast_index(out_index, out_shape, in_shape, in_index)
+            in_position = index_to_position(in_index, in_strides)
+            out_position = index_to_position(out_index, out_strides)
+            out[out_position] = fn(in_storage[in_position])
 
     return _map
 
@@ -306,8 +311,20 @@ def tensor_zip(
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        out_index = np.array(out_shape)
+        a_index = np.array(a_shape)
+        b_index = np.array(b_shape)
+        for i in range(operators.prod(out_shape)):
+            to_index(i, out_shape, out_index)
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            broadcast_index(out_index, out_shape, b_shape, b_index)
+            a_position = index_to_position(a_index, a_strides)
+            b_position = index_to_position(b_index, b_strides)
+            out_position = index_to_position(out_index, out_strides)
+
+            out[out_position] = fn(
+                a_storage[a_position],
+                b_storage[b_position])
 
     return _zip
 
@@ -337,10 +354,17 @@ def tensor_reduce(
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        a_index = np.array(a_shape)
+
+        for i in range(operators.prod(a_shape)):
+            to_index(i, a_shape, a_index)
+            in_position = index_to_position(a_index, a_strides)
+            a_index[reduce_dim] = 0
+            out_position = index_to_position(a_index, out_strides)
+            out[out_position] = fn(
+                out[out_position],
+                a_storage[in_position])
 
     return _reduce
-
 
 SimpleBackend = TensorBackend(SimpleOps)
